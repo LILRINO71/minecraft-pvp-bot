@@ -5,6 +5,7 @@ import com.mcbot.module.ModuleCategory;
 import com.mcbot.util.CombatUtil;
 import com.mcbot.util.EntityUtil;
 import com.mcbot.util.MovementUtil;
+import com.mcbot.util.RotationManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -67,7 +68,9 @@ public class KillAuraModule extends Module {
         LivingEntity target = targetOpt.get();
 
         // ── Aim + weapon ──────────────────────────────────────────────────
-        EntityUtil.lookAt(client, target);
+        // Route through RotationManager so SilentAim (if on) aims server-side without
+        // turning the camera; otherwise this rotates the camera like before.
+        RotationManager.aimAt(client, target);
         CombatUtil.switchToBestWeapon(client);
 
         // ── Sprint-reset bookkeeping (runs the tick after a hit) ──────────

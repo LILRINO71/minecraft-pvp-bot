@@ -66,6 +66,10 @@ public class BotCommandHandler {
             case "mace"      -> moduleManager.getModule("MaceCombat").toggle();
             case "pearl"     -> moduleManager.getModule("AutoPearl").toggle();
             case "grapple"   -> moduleManager.getModule("Grapple").toggle();
+            case "silentaim", "silent" -> moduleManager.getModule("SilentAim").toggle();
+            case "trigger", "triggerbot" -> moduleManager.getModule("TriggerBot").toggle();
+            case "totem", "autototem"    -> moduleManager.getModule("AutoTotem").toggle();
+            case "velocity", "antikb"    -> moduleManager.getModule("Velocity").toggle();
             case "elytra"    -> moduleManager.getModule("ElytraFlight").toggle();
             case "shield"    -> moduleManager.getModule("AutoShield").toggle();
             case "autoeat"   -> moduleManager.getModule("AutoEat").toggle();
@@ -224,6 +228,10 @@ public class BotCommandHandler {
         say(client, "§e#bot farm / explore            §7— toggle auto farm / exploration");
         say(client, "§e#bot killaura / crystal / mace §7— toggle combat modules");
         say(client, "§e#bot pearl / grapple           §7— pearl-catch / fishing-rod yank");
+        say(client, "§e#bot silentaim                 §7— aim server-side, camera stays still");
+        say(client, "§e#bot trigger                   §7— auto-attack what you look at");
+        say(client, "§e#bot totem                     §7— keep a totem in your off-hand");
+        say(client, "§e#bot velocity                  §7— reduce knockback taken");
         say(client, "§e#bot elytra / shield / bridge  §7— toggle other modules");
         say(client, "§e#bot esp                       §7— toggle entity hitbox ESP");
         say(client, "§6── Targeting (no AI needed) ──");

@@ -36,6 +36,10 @@ public class MCBotClient implements ClientModInitializer {
     public static KeyMapping TOGGLE_MACE_KEY;
     public static KeyMapping TOGGLE_PEARL_KEY;
     public static KeyMapping TOGGLE_GRAPPLE_KEY;
+    public static KeyMapping TOGGLE_SILENTAIM_KEY;
+    public static KeyMapping TOGGLE_TRIGGER_KEY;
+    public static KeyMapping TOGGLE_TOTEM_KEY;
+    public static KeyMapping TOGGLE_VELOCITY_KEY;
     public static KeyMapping PANIC_KEY;
     public static KeyMapping FRIEND_FOE_KEY;
 
@@ -64,6 +68,14 @@ public class MCBotClient implements ClientModInitializer {
                 "key.mcbot.pearl", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_P, CATEGORY));
         TOGGLE_GRAPPLE_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.mcbot.grapple", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_H, CATEGORY));
+        TOGGLE_SILENTAIM_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.mcbot.silentaim", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, CATEGORY));
+        TOGGLE_TRIGGER_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.mcbot.triggerbot", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, CATEGORY));
+        TOGGLE_TOTEM_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.mcbot.autototem", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, CATEGORY));
+        TOGGLE_VELOCITY_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.mcbot.velocity", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_U, CATEGORY));
         PANIC_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.mcbot.panic", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_END, CATEGORY));
         FRIEND_FOE_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
@@ -107,6 +119,18 @@ public class MCBotClient implements ClientModInitializer {
             while (TOGGLE_GRAPPLE_KEY.consumeClick()) {
                 moduleManager.getModule("Grapple").toggle();
             }
+            while (TOGGLE_SILENTAIM_KEY.consumeClick()) {
+                moduleManager.getModule("SilentAim").toggle();
+            }
+            while (TOGGLE_TRIGGER_KEY.consumeClick()) {
+                moduleManager.getModule("TriggerBot").toggle();
+            }
+            while (TOGGLE_TOTEM_KEY.consumeClick()) {
+                moduleManager.getModule("AutoTotem").toggle();
+            }
+            while (TOGGLE_VELOCITY_KEY.consumeClick()) {
+                moduleManager.getModule("Velocity").toggle();
+            }
             while (PANIC_KEY.consumeClick()) {
                 moduleManager.disableAll();
                 try {
@@ -128,7 +152,7 @@ public class MCBotClient implements ClientModInitializer {
         // render() no-ops unless the EntityESP module is enabled, so this is safe to register unconditionally.
         LevelRenderEvents.AFTER_TRANSLUCENT_FEATURES.register(ctx -> EntityESPModule.render(ctx));
 
-        LOGGER.info("[MC BOT] Ready. RShift=GUI | K=KillAura C=Crystal M=Mace P=Pearl H=Grapple V=Elytra | G=FriendFoe | END=panic");
+        LOGGER.info("[MC BOT] Ready. RShift=GUI | K=KillAura C=Crystal M=Mace P=Pearl H=Grapple V=Elytra | J=SilentAim R=Trigger O=Totem U=Velocity | G=FriendFoe | END=panic");
     }
 
     private void onFriendFoeKey(Minecraft client) {

@@ -32,6 +32,10 @@ Built against Mojang official mappings, Java 25, Fabric Loom 1.16.
 | `M` | Toggle MaceCombat |
 | `P` | Toggle AutoPearl |
 | `H` | Toggle Grapple |
+| `J` | Toggle SilentAim |
+| `R` | Toggle TriggerBot |
+| `O` | Toggle AutoTotem |
+| `U` | Toggle Velocity (anti-knockback) |
 | `V` | Toggle ElytraFlight |
 | `G` | Mark entity you're looking at as friend / foe (cycles) |
 | `END` | **PANIC** — disable everything and cancel Baritone |
@@ -56,6 +60,10 @@ free for Meteor Client):
 #bot mace                    — toggle MaceCombat
 #bot pearl                   — toggle AutoPearl
 #bot grapple                 — toggle Grapple
+#bot silentaim               — aim server-side, camera stays still
+#bot trigger                 — auto-attack the entity under your crosshair
+#bot totem                   — keep a Totem of Undying in your off-hand
+#bot velocity                — reduce knockback taken (anti-knockback)
 #bot elytra                  — toggle ElytraFlight
 #bot shield                  — toggle AutoShield
 #bot farm                    — toggle auto farm
@@ -82,7 +90,8 @@ free for Meteor Client):
 | **MaceCombat** | Elytra deploy → rocket-boosted ascent → steep dive → mace smash with a damage readout |
 | **AutoPearl** | Pearl-catches runners, escape-pearls when low, tracks enemy pearls in flight |
 | **Grapple** | Fishing-rod hook that yanks a target back into melee range |
-| **ElytraStrike** | Aerial sword hits while gliding at speed |
+| **SilentAim** | Sends aim to the server via a rotation packet — hits land, camera never turns (pairs with KillAura) |
+| **TriggerBot** | Auto-attacks the entity under your crosshair when charged; respects friend/foe filter |
 | **AutoShield** | Blocks incoming projectiles/melee; releases to attack |
 
 ### World
@@ -99,11 +108,13 @@ free for Meteor Client):
 | **AutoEat** | Eats when hunger drops |
 | **AutoArmor** | Auto-equips best armour from inventory |
 | **SpeedBridge** | Places blocks while walking — fast bridging |
+| **AutoTotem** | Keeps a Totem of Undying in your off-hand automatically |
 
 ### Movement / Render / AI
 | Module | Description |
 |--------|-------------|
 | **ElytraFlight** | Auto-deploys elytra, altitude hold, firework boosts |
+| **Velocity** | Reduces knockback taken when hit (anti-knockback) |
 | **EntityESP** | Colored outline boxes around living entities |
 | **BotBrain** | Natural-language goal → Claude API → task sequence |
 

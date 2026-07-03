@@ -2,8 +2,10 @@ package com.mcbot.module;
 
 import com.mcbot.module.combat.*;
 import com.mcbot.module.movement.ElytraFlightModule;
+import com.mcbot.module.movement.VelocityModule;
 import com.mcbot.module.player.AutoArmorModule;
 import com.mcbot.module.player.AutoEatModule;
+import com.mcbot.module.player.AutoTotemModule;
 import com.mcbot.module.player.SpeedBridgeModule;
 import com.mcbot.module.render.EntityESPModule;
 import com.mcbot.module.world.*;
@@ -27,6 +29,8 @@ public class ModuleManager {
             new AutoShieldModule(),
             new AutoPearlModule(),
             new GrappleModule(),
+            new SilentAimModule(),
+            new TriggerBotModule(),
 
             // Level
             new AutoMineModule(),
@@ -38,9 +42,11 @@ public class ModuleManager {
             new AutoEatModule(),
             new AutoArmorModule(),
             new SpeedBridgeModule(),
+            new AutoTotemModule(),
 
             // Movement
             new ElytraFlightModule(),
+            new VelocityModule(),
 
             // Render
             new EntityESPModule(),
