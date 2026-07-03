@@ -1,0 +1,9 @@
+accessWidener v2 named
+
+accessible field net/minecraft/client/network/ClientPlayerEntity input Lnet/minecraft/client/input/Input;
+accessible field net/minecraft/client/input/Input movementForward F
+accessible field net/minecraft/client/input/Input movementSideways F
+accessible field net/minecraft/client/input/Input jumping Z
+accessible field net/minecraft/client/input/Input sneaking Z
+accessible field net/minecraft/client/input/Input sprinting Z
+accessible method net/minecraft/client/network/ClientPlayerEntity attack (Lnet/minecraft/entity/Entity;)V

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "mcbot",
+  "version": "${version}",
+  "name": "MC BOT",
+  "description": "Superhuman Minecraft bot - combat, mining, farming, building, AI brain.",
+  "authors": ["Pranav"],
+  "license": "MIT",
+  "icon": "assets/mcbot/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["com.mcbot.MCBotClient"]
+  },
+  "mixins": ["mcbot.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "fabric-api": "*",
+    "minecraft": "*"
+  }
+}

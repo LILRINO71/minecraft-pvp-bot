@@ -1,0 +1,58 @@
+plugins {
+    // NEW plugin id for 26.1+ (does not remap; uses official Mojang mappings)
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
+    maven { name = 'Meteor releases'; url = 'https://maven.meteordev.org/releases' }
+    maven { name = 'Meteor snapshots'; url = 'https://maven.meteordev.org/snapshots' }
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // Baritone - Meteor's 26.1 fork. Compile against it; the jar must be
+    // present in the mods folder at runtime (bundled in Meteor Client).
+    compileOnly("meteordevelopment:baritone:${project.baritone_version}")
+}
+
+loom {
+    // Access widener disabled until ported to 26.1 (now a .classtweaker with official names).
+    // accessWidenerPath = file("src/main/resources/mcbot.classtweaker")
+}
+
+processResources {
+    inputs.property "version", project.version
+    filteringCharset "UTF-8"
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 25
+    it.options.encoding = "UTF-8"
+    it.options.compilerArgs.addAll(["-Xmaxerrs", "2000", "-Xmaxwarns", "2000"])
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+    from("LICENSE") { rename { "${it}_${project.archives_base_name}" } }
+}
