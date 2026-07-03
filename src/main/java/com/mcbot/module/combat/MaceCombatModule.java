@@ -158,7 +158,7 @@ public class MaceCombatModule extends Module {
         EntityUtil.lookAt(client, target);
 
         if (CombatUtil.isCooldownReady(client, 0.85f)) {
-            float fall = client.player.fallDistance;
+            float fall = (float) client.player.fallDistance;
             CombatUtil.attack(client, target);
             float dmg = CombatUtil.estimateMaceDamage(fall);
             announce(client, String.format("§a[MC BOT] Mace SMASH! ~%.0f dmg from %.1f blocks", dmg, fall));

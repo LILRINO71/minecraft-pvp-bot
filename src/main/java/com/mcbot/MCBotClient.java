@@ -4,10 +4,12 @@ import com.mcbot.command.BotCommandHandler;
 import com.mcbot.gui.BotScreen;
 import com.mcbot.gui.HudOverlay;
 import com.mcbot.module.ModuleManager;
+import com.mcbot.module.render.EntityESPModule;
 import com.mcbot.targeting.FriendList;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
 import net.minecraft.client.KeyMapping;
@@ -70,6 +72,7 @@ public class MCBotClient implements ClientModInitializer {
         moduleManager = new ModuleManager();
         commandHandler = new BotCommandHandler(moduleManager);
         hudOverlay = new HudOverlay(moduleManager);
+        hudOverlay.register();
 
         // Intercept #bot chat commands locally (handled, not sent to the server)
         ClientSendMessageEvents.ALLOW_CHAT.register(message -> {
@@ -121,8 +124,9 @@ public class MCBotClient implements ClientModInitializer {
             moduleManager.tick(client);
         });
 
-        // NOTE: HUD overlay + entity ESP world rendering are disabled pending the
-        // 26.1 HudElementRegistry / world-render API wiring (non-essential to the bot).
+        // Entity ESP: draw colored outline boxes after translucent features each frame.
+        // render() no-ops unless the EntityESP module is enabled, so this is safe to register unconditionally.
+        LevelRenderEvents.AFTER_TRANSLUCENT_FEATURES.register(ctx -> EntityESPModule.render(ctx));
 
         LOGGER.info("[MC BOT] Ready. RShift=GUI | K=KillAura C=Crystal M=Mace P=Pearl H=Grapple V=Elytra | G=FriendFoe | END=panic");
     }

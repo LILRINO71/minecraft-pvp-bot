@@ -1,15 +1,24 @@
 # MC BOT — Superhuman Minecraft Bot Mod
 
-A complete Fabric client mod for Minecraft **26.1.2** with hardcoded AI modules + Claude AI brain.
+A client-side Fabric mod for Minecraft **26.1.2**: a modular combat / utility / automation bot with a
+click-to-toggle GUI, a live HUD, entity ESP, Baritone-powered pathing, and an optional Claude AI "brain."
+
+Built against Mojang official mappings, Java 25, Fabric Loom 1.16.
 
 ---
 
 ## Quick Start
 
-1. **Install Fabric Loader** for Minecraft 26.1.2 at [fabricmc.net](https://fabricmc.net)
-2. **Download Baritone** (Fabric version) from [github.com/cabaletta/baritone/releases](https://github.com/cabaletta/baritone/releases) and drop it in `.minecraft/mods/`
-3. **Double-click `setup.bat`** — it auto-installs Java 21 if needed, then builds and installs the mod
-4. **Launch Minecraft** with Fabric and your world
+1. **Install Fabric Loader** for Minecraft 26.1.2 (via your launcher or [fabricmc.net](https://fabricmc.net)).
+2. **Install Fabric API** (matching 26.1.2) in `.minecraft/mods/`.
+3. **Install Baritone for 26.1** — use Meteor's actively-maintained fork
+   (`meteordevelopment:baritone`, bundled inside [Meteor Client](https://meteorclient.com) or from
+   [maven.meteordev.org](https://maven.meteordev.org)). The old `baritone-api-fabric-1.15` is for 1.21 and
+   will **not** load on 26.1.2.
+4. **Double-click `setup.bat`** — checks for Java 25, sets up the Gradle 9.4.1 wrapper, and builds the mod.
+5. Copy `build/libs/mcbot-1.0.0.jar` into `.minecraft/mods/` and launch.
+
+> **Requires Java 25** (Minecraft 26.1.2's toolchain). `setup.bat` will tell you if it's missing.
 
 ---
 
@@ -17,40 +26,48 @@ A complete Fabric client mod for Minecraft **26.1.2** with hardcoded AI modules 
 
 | Key | Action |
 |-----|--------|
-| `Right Shift` | Open GUI panel |
+| `Right Shift` | Open the **ClickGUI** (click any module to toggle it) |
 | `K` | Toggle KillAura |
 | `C` | Toggle AutoCrystal |
+| `M` | Toggle MaceCombat |
+| `P` | Toggle AutoPearl |
+| `H` | Toggle Grapple |
 | `V` | Toggle ElytraFlight |
-| `END` | PANIC — stop everything |
+| `G` | Mark entity you're looking at as friend / foe (cycles) |
+| `END` | **PANIC** — disable everything and cancel Baritone |
+
+A **HUD arraylist** (top-right) shows every enabled module in real time, and **EntityESP** draws colored
+boxes around entities (foe = red, friend = green, neutral players = white, hostile mobs = orange).
 
 ---
 
 ## Chat Commands
 
-Type in chat (never sent to server):
+Type in chat with the **`#bot`** prefix (handled locally, never sent to the server — the `.` prefix is left
+free for Meteor Client):
 
 ```
-.bot help                    — list all commands
-.bot mine <ore>              — mine: diamond/iron/gold/emerald/ancient/coal/obsidian
-.bot goto <x> <z>            — navigate to coordinates
-.bot build <schematic>       — build from .nbt schematic
-.bot farm                    — toggle auto farm
-.bot explore                 — explore the world
-.bot killaura                — toggle KillAura
-.bot crystal                 — toggle AutoCrystal
-.bot mace                    — toggle MaceCombat
-.bot elytra                  — toggle ElytraFlight
-.bot shield                  — toggle AutoShield
-.bot brain <goal>            — AI brain: natural language goal
-.bot stop                    — stop everything
-.bot status                  — show active modules
+#bot help                    — list all commands
+#bot status                  — show active modules
+#bot mine <ore>              — mine: diamond/iron/gold/emerald/ancient/coal/obsidian
+#bot goto <x> <z>            — navigate to coordinates
+#bot killaura                — toggle KillAura
+#bot crystal                 — toggle AutoCrystal
+#bot mace                    — toggle MaceCombat
+#bot pearl                   — toggle AutoPearl
+#bot grapple                 — toggle Grapple
+#bot elytra                  — toggle ElytraFlight
+#bot shield                  — toggle AutoShield
+#bot farm                    — toggle auto farm
+#bot explore                 — explore the world
+#bot brain <goal>            — AI brain: natural-language goal
+#bot stop                    — stop everything
 ```
 
 ### AI Brain example
 ```
-.bot brain get me ready for the End fight
-.bot brain mine diamonds until I have a full set then come back
-.bot brain explore the map and scout for villages
+#bot brain get me ready for the End fight
+#bot brain mine diamonds until I have a full set then come back
 ```
 
 ---
@@ -60,88 +77,74 @@ Type in chat (never sent to server):
 ### Combat
 | Module | Description |
 |--------|-------------|
-| **KillAura** | Auto-target, full-charge hits, W-tap, jump-crits, strafing |
-| **AutoCrystal** | Places and pops End Crystals at superhuman speed (~20/sec) |
-| **MaceCombat** | State machine: ascend 20 blocks → dive → smash target |
+| **KillAura** | Auto-target, circle-strafe, sprint-reset knockback, jump-crit timing, best-weapon auto-switch |
+| **AutoCrystal** | Places an End Crystal on a valid obsidian/bedrock base near the target, then pops it |
+| **MaceCombat** | Elytra deploy → rocket-boosted ascent → steep dive → mace smash with a damage readout |
+| **AutoPearl** | Pearl-catches runners, escape-pearls when low, tracks enemy pearls in flight |
+| **Grapple** | Fishing-rod hook that yanks a target back into melee range |
 | **ElytraStrike** | Aerial sword hits while gliding at speed |
-| **AutoShield** | Blocks incoming projectiles and melee; releases to attack |
+| **AutoShield** | Blocks incoming projectiles/melee; releases to attack |
 
 ### World
 | Module | Description |
 |--------|-------------|
 | **AutoMine** | Baritone-powered ore mining with ore presets |
-| **AutoFarm** | Scans radius, harvests mature crops, replants seeds |
-| **Builder** | Builds from .nbt schematics via Baritone |
-| **Exploration** | Outward spiral world exploration |
+| **AutoFarm** | Scans radius, harvests mature crops, replants |
+| **Builder** | Builds from `.nbt` schematics via Baritone |
+| **Exploration** | Outward-spiral world exploration |
 
 ### Player
 | Module | Description |
 |--------|-------------|
-| **AutoEat** | Eats food when hunger drops below 80% |
+| **AutoEat** | Eats when hunger drops |
 | **AutoArmor** | Auto-equips best armour from inventory |
-| **SpeedBridge** | Places blocks while walking — superhuman bridging |
+| **SpeedBridge** | Places blocks while walking — fast bridging |
 
-### Movement
+### Movement / Render / AI
 | Module | Description |
 |--------|-------------|
 | **ElytraFlight** | Auto-deploys elytra, altitude hold, firework boosts |
-
-### AI Brain
-| Module | Description |
-|--------|-------------|
-| **BotBrain** | Natural language goal → Claude API → task sequence |
+| **EntityESP** | Colored outline boxes around living entities |
+| **BotBrain** | Natural-language goal → Claude API → task sequence |
 
 ---
 
 ## Claude API (AI Brain)
 
-1. Get your free key at [console.anthropic.com](https://console.anthropic.com)
-2. Open `src/main/java/com/mcbot/ai/ClaudeClient.java`
-3. Paste your key on line: `private static final String API_KEY = "YOUR_KEY_HERE";`
-4. Re-run `setup.bat` to rebuild
+The AI brain is **optional** — every other module works without it.
 
-Uses `claude-haiku` — cheapest model, typically < $0.001 per command.
+- **Recommended:** set the environment variable `MC_BOT_CLAUDE_KEY` to your key. No rebuild, key never
+  touches the source (and never lands in the repo).
+- Or paste it into `src/main/java/com/mcbot/ai/ClaudeClient.java` (`API_KEY = "..."`) and re-run `setup.bat`.
 
-Alternatively, set environment variable `MC_BOT_CLAUDE_KEY` and you never have to touch the code.
-
----
-
-## Building Schematics
-
-Place `.nbt` schematic files in `.minecraft/schematics/` then:
-```
-.bot build my_house
-```
-
-The bot will navigate to your current position and build the structure using Baritone.
+Get a key at [console.anthropic.com](https://console.anthropic.com).
 
 ---
+
+## Tech Notes
+
+- **Minecraft 26.1.2** on Mojang official mappings (26.1 dropped yarn/intermediary).
+- **No mixins** — chat interception uses Fabric's `ClientSendMessageEvents`, the tick loop uses
+  `ClientTickEvents`, the HUD uses `HudElementRegistry`, and ESP uses `LevelRenderEvents` — all stable
+  Fabric API surfaces rather than fragile bytecode injection.
+- **Baritone** is a `compileOnly` dependency (Meteor's 26.1 fork); the runtime jar lives in your mods folder.
 
 ## Project Structure
 
 ```
-MC BOT/
-├── setup.bat                    ← Run this first
-├── build.gradle
-├── gradle.properties
-├── settings.gradle
-└── src/main/java/com/mcbot/
-    ├── MCBotClient.java          ← Entry point
-    ├── ai/
-    │   ├── BotBrainModule.java   ← AI module
-    │   ├── ClaudeClient.java     ← API calls
-    │   ├── Task.java
-    │   └── TaskQueue.java
-    ├── command/
-    │   └── BotCommandHandler.java
-    ├── gui/
-    │   ├── BotScreen.java        ← Right-Shift GUI
-    │   └── HudOverlay.java       ← Active module list
-    ├── mixin/                    ← Minecraft hooks
-    ├── module/
-    │   ├── combat/               ← KillAura, AutoCrystal, Mace, Elytra, Shield
-    │   ├── movement/             ← ElytraFlight
-    │   ├── player/               ← AutoEat, AutoArmor, SpeedBridge
-    │   └── world/                ← AutoMine, AutoFarm, Builder, Exploration
-    └── util/                     ← EntityUtil, CombatUtil, InventoryUtil, BlockUtil
+src/main/java/com/mcbot/
+├── MCBotClient.java          ← Entry point: keybinds, tick loop, event wiring
+├── ai/                       ← BotBrainModule, ClaudeClient, Task, TaskQueue
+├── command/                  ← BotCommandHandler (#bot ...)
+├── gui/
+│   ├── BotScreen.java        ← Right-Shift ClickGUI (click to toggle)
+│   └── HudOverlay.java       ← Enabled-module HUD arraylist
+├── module/
+│   ├── combat/               ← KillAura, AutoCrystal, Mace, AutoPearl, Grapple, Elytra, Shield
+│   ├── movement/             ← ElytraFlight
+│   ├── player/               ← AutoEat, AutoArmor, SpeedBridge
+│   ├── render/               ← EntityESP
+│   └── world/                ← AutoMine, AutoFarm, Builder, Exploration
+├── targeting/                ← FriendList, TargetConfig
+└── util/                     ← EntityUtil, CombatUtil, InventoryUtil, BlockUtil, MovementUtil
 ```
