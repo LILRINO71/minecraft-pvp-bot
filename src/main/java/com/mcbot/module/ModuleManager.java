@@ -1,6 +1,7 @@
 package com.mcbot.module;
 
 import com.mcbot.module.combat.*;
+import com.mcbot.module.movement.AutoClutchModule;
 import com.mcbot.module.movement.AutoSprintModule;
 import com.mcbot.module.movement.ElytraFlightModule;
 import com.mcbot.module.movement.NoFallModule;
@@ -11,6 +12,7 @@ import com.mcbot.module.player.AutoArmorModule;
 import com.mcbot.module.player.AutoEatModule;
 import com.mcbot.module.player.AutoTotemModule;
 import com.mcbot.module.player.SpeedBridgeModule;
+import com.mcbot.module.player.SurvivalModule;
 import com.mcbot.module.render.EntityESPModule;
 import com.mcbot.module.render.FullbrightModule;
 import com.mcbot.module.render.TracersModule;
@@ -50,6 +52,7 @@ public class ModuleManager {
             new AutoArmorModule(),
             new SpeedBridgeModule(),
             new AutoTotemModule(),
+            new SurvivalModule(),
 
             // Movement
             new ElytraFlightModule(),
@@ -58,6 +61,7 @@ public class ModuleManager {
             new AutoSprintModule(),
             new StepModule(),
             new NoFallModule(),
+            new AutoClutchModule(),
 
             // Render
             new EntityESPModule(),
