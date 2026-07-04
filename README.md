@@ -92,6 +92,7 @@ free for Meteor Client):
 | **Grapple** | Fishing-rod hook that yanks a target back into melee range |
 | **SilentAim** | Sends aim to the server via a rotation packet — hits land, camera never turns (pairs with KillAura) |
 | **TriggerBot** | Auto-attacks the entity under your crosshair when charged; respects friend/foe filter |
+| **Surround** | Instantly boxes obsidian around your feet to block crystal damage |
 | **AutoShield** | Blocks incoming projectiles/melee; releases to attack |
 
 ### World
@@ -115,7 +116,13 @@ free for Meteor Client):
 |--------|-------------|
 | **ElytraFlight** | Auto-deploys elytra, altitude hold, firework boosts |
 | **Velocity** | Reduces knockback taken when hit (anti-knockback) |
+| **SafeStep** | Won't let you walk off block edges (sneak to override) |
+| **AutoSprint** | Always sprint while moving forward |
+| **Step** | Walk straight up full blocks without jumping |
+| **NoFall** | Cancels fall damage (packet-based) |
 | **EntityESP** | Colored outline boxes around living entities |
+| **Tracers** | Lines from your view to entities, friend/foe colored |
+| **Fullbright** | Maximum brightness — see in the dark |
 | **BotBrain** | Natural-language goal → Claude API → task sequence |
 
 ---

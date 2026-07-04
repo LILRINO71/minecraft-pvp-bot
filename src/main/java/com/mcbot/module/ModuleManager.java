@@ -1,14 +1,19 @@
 package com.mcbot.module;
 
 import com.mcbot.module.combat.*;
+import com.mcbot.module.movement.AutoSprintModule;
 import com.mcbot.module.movement.ElytraFlightModule;
+import com.mcbot.module.movement.NoFallModule;
 import com.mcbot.module.movement.SafeStepModule;
+import com.mcbot.module.movement.StepModule;
 import com.mcbot.module.movement.VelocityModule;
 import com.mcbot.module.player.AutoArmorModule;
 import com.mcbot.module.player.AutoEatModule;
 import com.mcbot.module.player.AutoTotemModule;
 import com.mcbot.module.player.SpeedBridgeModule;
 import com.mcbot.module.render.EntityESPModule;
+import com.mcbot.module.render.FullbrightModule;
+import com.mcbot.module.render.TracersModule;
 import com.mcbot.module.world.*;
 import com.mcbot.ai.BotBrainModule;
 import net.minecraft.client.Minecraft;
@@ -32,6 +37,7 @@ public class ModuleManager {
             new GrappleModule(),
             new SilentAimModule(),
             new TriggerBotModule(),
+            new SurroundModule(),
 
             // Level
             new AutoMineModule(),
@@ -49,9 +55,14 @@ public class ModuleManager {
             new ElytraFlightModule(),
             new VelocityModule(),
             new SafeStepModule(),
+            new AutoSprintModule(),
+            new StepModule(),
+            new NoFallModule(),
 
             // Render
             new EntityESPModule(),
+            new TracersModule(),
+            new FullbrightModule(),
 
             // AI
             new BotBrainModule()

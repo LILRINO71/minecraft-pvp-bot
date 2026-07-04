@@ -150,9 +150,10 @@ public class MCBotClient implements ClientModInitializer {
             com.mcbot.settings.SettingsStore.saveIfDirty(moduleManager);
         });
 
-        // Entity ESP: draw colored outline boxes after translucent features each frame.
-        // render() no-ops unless the EntityESP module is enabled, so this is safe to register unconditionally.
+        // Entity ESP + Tracers: draw after translucent features each frame.
+        // Each render() no-ops unless its module is enabled, so registering unconditionally is safe.
         LevelRenderEvents.AFTER_TRANSLUCENT_FEATURES.register(ctx -> EntityESPModule.render(ctx));
+        LevelRenderEvents.AFTER_TRANSLUCENT_FEATURES.register(ctx -> com.mcbot.module.render.TracersModule.render(ctx));
 
         LOGGER.info("[MC BOT] Ready. RShift=GUI | K=KillAura C=Crystal M=Mace P=Pearl H=Grapple V=Elytra | J=SilentAim R=Trigger O=Totem U=Velocity | G=FriendFoe | END=panic");
     }
