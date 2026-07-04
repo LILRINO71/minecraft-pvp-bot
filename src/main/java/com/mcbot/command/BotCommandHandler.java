@@ -82,6 +82,9 @@ public class BotCommandHandler {
             case "friend"    -> handleFriend(client, arg);
             case "foe"       -> handleFoe(client, arg);
             case "unfriend"  -> { FriendList.get().remove(arg); say(client, "Removed: " + arg); }
+            // ── Settings ──────────────────────────────────────────────────
+            case "set"       -> handleSet(client, arg);
+            case "settings"  -> handleSettings(client, arg);
             // ── Macros (no AI needed) ─────────────────────────────────────
             case "macro"     -> handleMacro(client, arg);
             default          -> toggleByName(client, sub);
@@ -204,6 +207,45 @@ public class BotCommandHandler {
         }
     }
 
+    /** #bot set <module> <setting> <value> */
+    private void handleSet(Minecraft client, String arg) {
+        String[] parts = arg.trim().split("\\s+", 3);
+        if (parts.length < 3) { say(client, "Usage: #bot set <module> <setting> <value>"); return; }
+        Module m = findModule(parts[0]);
+        if (m == null) { say(client, "Unknown module: §c" + parts[0]); return; }
+        com.mcbot.settings.Setting<?> s = m.getSetting(parts[1]);
+        if (s == null) {
+            say(client, "Unknown setting §c" + parts[1] + "§f on " + m.getName() + ". Try #bot settings " + m.getName());
+            return;
+        }
+        if (s.parse(parts[2])) {
+            say(client, m.getName() + "." + s.getName() + " = §a" + s.display());
+        } else {
+            say(client, "Invalid value §c" + parts[2] + "§f for " + s.getName());
+        }
+    }
+
+    /** #bot settings <module> — list a module's tunables. */
+    private void handleSettings(Minecraft client, String arg) {
+        if (arg.isBlank()) { say(client, "Usage: #bot settings <module>"); return; }
+        Module m = findModule(arg.trim());
+        if (m == null) { say(client, "Unknown module: §c" + arg); return; }
+        var settings = m.getSettings();
+        if (settings.isEmpty()) { say(client, m.getName() + " has no settings."); return; }
+        say(client, "§6=== " + m.getName() + " settings ===");
+        for (com.mcbot.settings.Setting<?> s : settings) {
+            say(client, "§e" + s.getName() + " §f= " + s.display() + " §7— " + s.getDescription());
+        }
+        say(client, "§7Set with: #bot set " + m.getName() + " <setting> <value>");
+    }
+
+    private Module findModule(String name) {
+        for (Module m : moduleManager.getAll()) {
+            if (m.getName().equalsIgnoreCase(name)) return m;
+        }
+        return null;
+    }
+
     private String onOff(boolean b) { return b ? "§aON" : "§cOFF"; }
 
     private void toggleByName(Minecraft client, String name) {
@@ -245,6 +287,10 @@ public class BotCommandHandler {
         say(client, "§e#bot macro <name>              §7— run a macro");
         say(client, "§6── AI Brain (needs API key) ──");
         say(client, "§e#bot brain <goal>              §7— natural language goal");
+        say(client, "§6── Tuning (everything is adjustable) ──");
+        say(client, "§e#bot settings <module>         §7— list a module's tunable settings");
+        say(client, "§e#bot set <module> <name> <val> §7— change a setting (or use the ClickGUI)");
+        say(client, "§7  Right-click a module in the GUI to open its settings submenu.");
         say(client, "§6── Control ──");
         say(client, "§e#bot stop / status             §7— stop / show active modules");
         say(client, "§7Right-Shift=GUI | G=Friend/Foe toggle | END=panic");

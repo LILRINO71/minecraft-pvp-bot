@@ -2,12 +2,16 @@ package com.mcbot.module.combat;
 
 import com.mcbot.module.Module;
 import com.mcbot.module.ModuleCategory;
+import com.mcbot.settings.DoubleSetting;
+import com.mcbot.settings.IntSetting;
 import com.mcbot.util.CombatUtil;
 import com.mcbot.util.EntityUtil;
 import com.mcbot.util.InventoryUtil;
 import com.mcbot.util.MovementUtil;
+import com.mcbot.util.RotationManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -32,10 +36,13 @@ import java.util.Optional;
 public class MaceCombatModule extends Module {
 
     private static final double TARGET_RANGE = 28.0;
-    private static final float  DROP_HEIGHT  = 18.0f;  // blocks above target to climb
-    private static final double DIVE_SPEED   = 1.6;    // extra downward m/tick
     private static final double SMASH_DIST    = 3.0;
     private static final int    BOOST_CD      = 12;    // ticks between rocket boosts
+
+    private final IntSetting dropHeight = addSetting(new IntSetting(
+            "climb", "Blocks to climb above the target before diving.", 18, 5, 40, 1));
+    private final DoubleSetting diveSpeed = addSetting(new DoubleSetting(
+            "diveSpeed", "Extra downward speed while diving (more = harder smash).", 1.6, 0.5, 3.0, 0.1));
 
     private enum State { IDLE, TAKEOFF, ASCENDING, DIVING, SMASHING }
     private State state = State.IDLE;
@@ -105,17 +112,27 @@ public class MaceCombatModule extends Module {
 
         if (client.player.isFallFlying()) {
             transition(State.ASCENDING);
-            announce(client, "§b[MC BOT] Mace: climbing " + (int) DROP_HEIGHT + " blocks…");
+            announce(client, "§b[MC BOT] Mace: climbing " + dropHeight.get() + " blocks…");
             return;
         }
 
-        // Hop off the ground, then attempt to deploy the elytra mid-air.
+        // Hop off the ground, then deploy the elytra mid-air.
         if (client.player.onGround()) {
             MovementUtil.jump(client, true);
         } else {
             MovementUtil.jump(client, false);
-            client.player.tryToStartFallFlying(); // sends start-glide to the server
-            boostRocket(client);                  // kick in a rocket to get moving
+            deployElytra(client);   // client flag + server command packet
+            boostRocket(client);    // kick in a rocket to get moving
+        }
+    }
+
+    /** Deploys the elytra both client-side and server-side (the server needs the command packet). */
+    private void deployElytra(Minecraft client) {
+        if (client.player.isFallFlying()) return;
+        client.player.tryToStartFallFlying();
+        if (client.player.connection != null) {
+            client.player.connection.send(new ServerboundPlayerCommandPacket(
+                    client.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
         }
     }
 
@@ -128,7 +145,7 @@ public class MaceCombatModule extends Module {
         client.player.setXRot(-75f);
         boostRocket(client);
 
-        if (client.player.getY() >= targetY + DROP_HEIGHT) {
+        if (client.player.getY() >= targetY + dropHeight.get()) {
             transition(State.DIVING);
             announce(client, "§b[MC BOT] Mace: diving!");
         }
@@ -143,7 +160,7 @@ public class MaceCombatModule extends Module {
         EntityUtil.lookAt(client, target);
         client.player.setXRot(82f);
         Vec3 v = client.player.getDeltaMovement();
-        client.player.setDeltaMovement(v.x, Math.min(v.y, -DIVE_SPEED), v.z);
+        client.player.setDeltaMovement(v.x, Math.min(v.y, -diveSpeed.get()), v.z);
 
         if (EntityUtil.distance(client, target) <= SMASH_DIST) {
             transition(State.SMASHING);

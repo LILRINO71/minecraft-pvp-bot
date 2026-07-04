@@ -85,6 +85,7 @@ public class MCBotClient implements ClientModInitializer {
         commandHandler = new BotCommandHandler(moduleManager);
         hudOverlay = new HudOverlay(moduleManager);
         hudOverlay.register();
+        com.mcbot.settings.SettingsStore.load(moduleManager);
 
         // Intercept #bot chat commands locally (handled, not sent to the server)
         ClientSendMessageEvents.ALLOW_CHAT.register(message -> {
@@ -146,6 +147,7 @@ public class MCBotClient implements ClientModInitializer {
             }
 
             moduleManager.tick(client);
+            com.mcbot.settings.SettingsStore.saveIfDirty(moduleManager);
         });
 
         // Entity ESP: draw colored outline boxes after translucent features each frame.

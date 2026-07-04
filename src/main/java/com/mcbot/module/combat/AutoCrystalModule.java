@@ -2,6 +2,8 @@ package com.mcbot.module.combat;
 
 import com.mcbot.module.Module;
 import com.mcbot.module.ModuleCategory;
+import com.mcbot.settings.BoolSetting;
+import com.mcbot.settings.DoubleSetting;
 import com.mcbot.util.BlockUtil;
 import com.mcbot.util.CombatUtil;
 import com.mcbot.util.EntityUtil;
@@ -40,9 +42,14 @@ public class AutoCrystalModule extends Module {
 
     private static final double PLACE_RANGE  = 5.0;
     private static final double POP_RANGE    = 6.0;
-    private static final float  MIN_DAMAGE   = 4.0f;   // min enemy damage to bother
-    private static final float  MAX_SELF_DMG = 9.0f;   // abort if self-damage too high
     private static final int    PLACE_RADIUS = 4;      // search radius around enemy
+
+    private final DoubleSetting minDamage = addSetting(new DoubleSetting(
+            "minDamage", "Minimum damage to the target before placing/popping.", 4.0, 1.0, 20.0, 0.5));
+    private final DoubleSetting maxSelfDamage = addSetting(new DoubleSetting(
+            "maxSelfDamage", "Never place/pop if it would deal more than this to you.", 9.0, 1.0, 20.0, 0.5));
+    private final BoolSetting placeObsidian = addSetting(new BoolSetting(
+            "placeObsidian", "If no obsidian base is near the target, place one from your inventory.", true));
 
     private int placeCooldown = 0;
     private int noBaseWarnCd = 0;
@@ -67,11 +74,14 @@ public class AutoCrystalModule extends Module {
         if (targetOpt.isEmpty()) return;
         LivingEntity target = targetOpt.get();
 
+        float maxSelf = (float) (double) maxSelfDamage.get();
+        float minDmg  = (float) (double) minDamage.get();
+
         // ── Step 1: pop the best existing crystal ─────────────────────────
-        EndCrystal bestPop = CombatUtil.bestCrystalTarget(client, target, MAX_SELF_DMG, POP_RANGE);
+        EndCrystal bestPop = CombatUtil.bestCrystalTarget(client, target, maxSelf, POP_RANGE);
         if (bestPop != null) {
             float dmg = CombatUtil.estimateCrystalDamage(bestPop.position(), target);
-            if (dmg >= MIN_DAMAGE) {
+            if (dmg >= minDmg) {
                 EntityUtil.lookAt(client, bestPop);
                 CombatUtil.attack(client, bestPop);   // left-click = detonate
             }
@@ -84,9 +94,14 @@ public class AutoCrystalModule extends Module {
         List<BlockPos> bases = BlockUtil.getCrystalPlacementPositions(
                 client.level, target.position(), PLACE_RADIUS);
         if (bases.isEmpty()) {
+            // No base near the target: place obsidian ourselves if we have it.
+            if (placeObsidian.get() && InventoryUtil.hasItem(client, Items.OBSIDIAN)) {
+                if (tryPlaceObsidian(client, target)) { placeCooldown = 2; return; }
+            }
             if (noBaseWarnCd-- <= 0) {
                 client.player.sendSystemMessage(Component.literal(
-                        "§e[MC BOT] Crystal: no obsidian/bedrock base near target."));
+                        "§e[MC BOT] Crystal: no obsidian/bedrock base near target"
+                        + (InventoryUtil.hasItem(client, Items.OBSIDIAN) ? "." : " (and no obsidian to place).")));
                 noBaseWarnCd = 60;
             }
             return;
@@ -99,8 +114,8 @@ public class AutoCrystalModule extends Module {
                     Vec3 crystal = Vec3.atCenterOf(p).add(0, 1, 0);
                     float dmg  = CombatUtil.estimateCrystalDamage(crystal, target);
                     float self = CombatUtil.estimateSelfDamage(client, crystal);
-                    if (self > MAX_SELF_DMG) return -999.0;
-                    if (dmg  < MIN_DAMAGE)   return -999.0;
+                    if (self > maxSelf) return -999.0;
+                    if (dmg  < minDmg)  return -999.0;
                     return (double) dmg - self * 0.5;
                 }))
                 .orElse(null);
@@ -120,6 +135,37 @@ public class AutoCrystalModule extends Module {
             client.player.swing(InteractionHand.MAIN_HAND);
             placeCooldown = 1; // brief delay; crystal entity appears next tick to pop
         }
+    }
+
+    /**
+     * Places an obsidian block near the target so a crystal can sit on it. Finds an air spot at the
+     * target's feet level with solid ground beneath and air above, then right-clicks the block below
+     * it (top face) with obsidian selected. Returns true if a placement was attempted.
+     */
+    private boolean tryPlaceObsidian(Minecraft client, LivingEntity target) {
+        if (!InventoryUtil.switchToItem(client, Items.OBSIDIAN)) return false;
+        BlockPos feet = BlockPos.containing(target.position());
+
+        for (int dy = 0; dy >= -1; dy--) {
+            for (int[] off : new int[][] { {0,0}, {1,0}, {-1,0}, {0,1}, {0,-1} }) {
+                BlockPos p = feet.offset(off[0], dy, off[1]);         // where obsidian should go
+                BlockPos support = p.below();                        // block we click against
+                if (!BlockUtil.isAir(client.level, p)) continue;
+                if (!BlockUtil.isAir(client.level, p.above())) continue; // room for the crystal
+                if (BlockUtil.isAir(client.level, support)) continue;    // need something to click
+                if (BlockUtil.distanceTo(client, p) > PLACE_RANGE) continue;
+
+                Vec3 topFace = new Vec3(support.getX() + 0.5, support.getY() + 1.0, support.getZ() + 0.5);
+                EntityUtil.lookAt(client, topFace);
+                BlockHitResult hit = new BlockHitResult(topFace, Direction.UP, support, false);
+                InteractionResult r = client.gameMode.useItemOn(client.player, InteractionHand.MAIN_HAND, hit);
+                if (r.consumesAction()) {
+                    client.player.swing(InteractionHand.MAIN_HAND);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override

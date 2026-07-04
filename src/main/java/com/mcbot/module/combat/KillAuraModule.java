@@ -2,6 +2,8 @@ package com.mcbot.module.combat;
 
 import com.mcbot.module.Module;
 import com.mcbot.module.ModuleCategory;
+import com.mcbot.settings.BoolSetting;
+import com.mcbot.settings.DoubleSetting;
 import com.mcbot.util.CombatUtil;
 import com.mcbot.util.EntityUtil;
 import com.mcbot.util.MovementUtil;
@@ -28,10 +30,19 @@ import java.util.Optional;
  */
 public class KillAuraModule extends Module {
 
-    private static final double REACH            = 4.0;  // max hit distance
     private static final double STRAFE_RANGE      = 2.9; // orbit distance to hold
-    private static final float  CHARGE_THRESHOLD  = 0.92f;
     private static final int    DIR_FLIP_TICKS    = 26;  // re-roll strafe direction
+
+    private final DoubleSetting reach = addSetting(new DoubleSetting(
+            "reach", "Max distance to hit a target (vanilla ~3.0, server-safe <= 3.0).", 3.0, 2.5, 6.0, 0.1));
+    private final DoubleSetting charge = addSetting(new DoubleSetting(
+            "charge", "How charged the cooldown must be to swing (1.0 = fully, max damage).", 0.92, 0.1, 1.0, 0.01));
+    private final BoolSetting strafe = addSetting(new BoolSetting(
+            "strafe", "Circle-strafe around the target (off = stand still, more legit).", true));
+    private final BoolSetting criticals = addSetting(new BoolSetting(
+            "criticals", "Jump before hits to land criticals.", true));
+    private final BoolSetting sprintReset = addSetting(new BoolSetting(
+            "sprintReset", "Drop sprint for one tick after each hit for full knockback (anti-sweep).", true));
 
     private int strafeDir = 1;        // +1 right, -1 left
     private int dirTimer = 0;
@@ -58,7 +69,7 @@ public class KillAuraModule extends Module {
 
     @Override
     protected void onTick(Minecraft client) {
-        Optional<LivingEntity> targetOpt = EntityUtil.getNearestTarget(client, REACH + STRAFE_RANGE + 4.0);
+        Optional<LivingEntity> targetOpt = EntityUtil.getNearestTarget(client, reach.get() + STRAFE_RANGE + 4.0);
         if (targetOpt.isEmpty()) {
             // No target → stop driving the player so manual control returns.
             MovementUtil.stopStrafe(client);
@@ -74,38 +85,43 @@ public class KillAuraModule extends Module {
         CombatUtil.switchToBestWeapon(client);
 
         // ── Sprint-reset bookkeeping (runs the tick after a hit) ──────────
-        if (pendingSprintReset) {
+        if (sprintReset.get() && pendingSprintReset) {
             MovementUtil.sprintReset(client);   // drop sprint for this one tick
             pendingSprintReset = false;
         } else {
             // Keep sprint engaged so strafing/attacks count as sprint hits.
             client.player.setSprinting(true);
             MovementUtil.sprint(client, true);
+            pendingSprintReset = false;
         }
 
-        // ── Movement: circle-strafe around the target ─────────────────────
-        if (--dirTimer <= 0) {
-            strafeDir = (Math.random() < 0.5) ? -1 : 1;
-            dirTimer = DIR_FLIP_TICKS;
+        // ── Movement: circle-strafe around the target (optional) ──────────
+        if (strafe.get()) {
+            if (--dirTimer <= 0) {
+                strafeDir = (Math.random() < 0.5) ? -1 : 1;
+                dirTimer = DIR_FLIP_TICKS;
+            }
+            // Flip away from walls: if barely moving horizontally, reverse.
+            double hSpeed = client.player.getDeltaMovement().horizontalDistance();
+            if (hSpeed < 0.03) { strafeDir = -strafeDir; dirTimer = DIR_FLIP_TICKS; }
+            MovementUtil.circleStrafe(client, target, strafeDir, STRAFE_RANGE);
+        } else {
+            MovementUtil.stopStrafe(client);
         }
-        // Flip away from walls: if barely moving horizontally, reverse.
-        double hSpeed = client.player.getDeltaMovement().horizontalDistance();
-        if (hSpeed < 0.03) { strafeDir = -strafeDir; dirTimer = DIR_FLIP_TICKS; }
-        MovementUtil.circleStrafe(client, target, strafeDir, STRAFE_RANGE);
 
         // ── Attack timing ─────────────────────────────────────────────────
-        boolean charged = CombatUtil.isCooldownReady(client, CHARGE_THRESHOLD);
+        boolean charged = CombatUtil.isCooldownReady(client, (float) (double) charge.get());
         double dist = EntityUtil.distance(client, target);
-        if (!charged || dist > REACH) return;
+        if (!charged || dist > reach.get()) return;
 
         // Try to land the hit as a critical: jump when grounded, strike on descent.
-        if (MovementUtil.canCritJump(client) && !jumpedForCrit) {
+        if (criticals.get() && MovementUtil.canCritJump(client) && !jumpedForCrit) {
             MovementUtil.critJump(client);
             jumpedForCrit = true;
             return; // wait until we're falling to swing
         }
 
-        boolean inCrit = MovementUtil.inCritWindow(client);
+        boolean inCrit = !criticals.get() || MovementUtil.inCritWindow(client);
         // Strike if we're in the crit window, or if a crit isn't available
         // (e.g. mid-air from terrain) so we never stall and let the enemy hit us.
         if (inCrit || !MovementUtil.canCritJump(client)) {

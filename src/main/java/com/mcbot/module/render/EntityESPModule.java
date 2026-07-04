@@ -66,6 +66,14 @@ public class EntityESPModule extends Module {
     // ARGB-ish components (0-255). Alpha kept high so lines are clearly visible.
     private static final int A = 255;
 
+    private final com.mcbot.settings.DoubleSetting lineWidth = addSetting(new com.mcbot.settings.DoubleSetting(
+            "width", "Outline thickness in pixels.", 2.0, 0.5, 6.0, 0.5));
+    private final com.mcbot.settings.BoolSetting playersOnly = addSetting(new com.mcbot.settings.BoolSetting(
+            "playersOnly", "Only draw boxes around players (ignore mobs).", false));
+
+    /** Mirror of the width setting readable from the static render loop. */
+    private static volatile float activeWidth = 2.0f;
+
     public EntityESPModule() {
         super("EntityESP", "Colored outline boxes around living entities.", ModuleCategory.RENDER);
         INSTANCE = this;
@@ -83,8 +91,8 @@ public class EntityESPModule extends Module {
 
     @Override
     protected void onTick(Minecraft client) {
-        // ESP is drawn from the world-render event, not from the game tick.
-        // onTick intentionally does nothing; enabled state is mirrored into ACTIVE.
+        // Sync tunables into the static fields the render loop reads.
+        activeWidth = (float) (double) lineWidth.get();
     }
 
     /**
@@ -128,10 +136,12 @@ public class EntityESPModule extends Module {
         poseStack.translate(-camX, -camY, -camZ);
         PoseStack.Pose pose = poseStack.last();
 
+        boolean playersOnly = INSTANCE.playersOnly.get();
         for (Entity entity : level.entitiesForRendering()) {
             if (!(entity instanceof LivingEntity living)) continue;
             if (entity == self) continue;               // skip the local player / camera entity
             if (entity == mc.player) continue;
+            if (playersOnly && !(living instanceof Player)) continue;
 
             int[] rgb = colorFor(living);
             AABB box = entity.getBoundingBox();
@@ -197,7 +207,9 @@ public class EntityESPModule extends Module {
         if (len == 0.0f) return;
         nx /= len; ny /= len; nz /= len;
 
-        buf.addVertex(pose, ax, ay, az).setColor(r, g, b, A).setNormal(pose, nx, ny, nz);
-        buf.addVertex(pose, bx, by, bz).setColor(r, g, b, A).setNormal(pose, nx, ny, nz);
+        // 26.1's lines vertex format REQUIRES a per-vertex LineWidth element — omitting it
+        // crashes with "Missing elements in vertex: LineWidth" (see crash-2026-07-03_15.25.15).
+        buf.addVertex(pose, ax, ay, az).setColor(r, g, b, A).setNormal(pose, nx, ny, nz).setLineWidth(activeWidth);
+        buf.addVertex(pose, bx, by, bz).setColor(r, g, b, A).setNormal(pose, nx, ny, nz).setLineWidth(activeWidth);
     }
 }

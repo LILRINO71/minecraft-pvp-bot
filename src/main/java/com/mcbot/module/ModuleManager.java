@@ -2,6 +2,7 @@ package com.mcbot.module;
 
 import com.mcbot.module.combat.*;
 import com.mcbot.module.movement.ElytraFlightModule;
+import com.mcbot.module.movement.SafeStepModule;
 import com.mcbot.module.movement.VelocityModule;
 import com.mcbot.module.player.AutoArmorModule;
 import com.mcbot.module.player.AutoEatModule;
@@ -47,6 +48,7 @@ public class ModuleManager {
             // Movement
             new ElytraFlightModule(),
             new VelocityModule(),
+            new SafeStepModule(),
 
             // Render
             new EntityESPModule(),

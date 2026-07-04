@@ -2,6 +2,7 @@ package com.mcbot.module.player;
 
 import com.mcbot.module.Module;
 import com.mcbot.module.ModuleCategory;
+import com.mcbot.settings.IntSetting;
 import com.mcbot.util.InventoryUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -19,6 +20,13 @@ public class AutoTotemModule extends Module {
 
     /** Off-hand is index 40 in the SWAP button convention (0-8 = hotbar slots, 40 = off-hand). */
     private static final int OFFHAND_BUTTON = 40;
+
+    private final IntSetting delay = addSetting(new IntSetting(
+            "delay", "Ticks to wait between totem re-swaps (20 ticks = 1 second).",
+            2, 0, 40, 1));
+    private final IntSetting minHealth = addSetting(new IntSetting(
+            "minHealth", "Only refill the off-hand when your health is at/below this (20 = always).",
+            20, 1, 20, 1));
 
     private int cooldown = 0;
     private boolean warnedEmpty = false;
@@ -41,6 +49,9 @@ public class AutoTotemModule extends Module {
         if (client.screen != null) return;
 
         if (cooldown > 0) { cooldown--; return; }
+
+        // Health gate: only bother when at/below the configured health.
+        if (client.player.getHealth() > minHealth.get()) return;
 
         // Already holding a totem in the off-hand? Nothing to do.
         if (client.player.getOffhandItem().getItem() == Items.TOTEM_OF_UNDYING) {
@@ -65,6 +76,6 @@ public class AutoTotemModule extends Module {
                 client.player.inventoryMenu.containerId, menuSlot, OFFHAND_BUTTON,
                 ContainerInput.SWAP, client.player);
 
-        cooldown = 3; // let the swap round-trip before trying again
+        cooldown = delay.get(); // tunable wait before the next re-swap
     }
 }
