@@ -65,6 +65,8 @@ public class ClaudeClient {
                 - GATHER: collect N of a resource. args[0] = resource, args[1] = count.
                   resources: diamond, iron, gold, copper, coal, redstone, lapis, emerald, ancient, obsidian, stone, dirt, sand, wood
                 - TRAVEL: route to coordinates and stop on arrival. args = ["x","z"] or ["x","y","z"]
+                - CRAFT: craft an item at an open crafting table. args[0] = item, args[1] = count.
+                  items: planks, stick, crafting_table, chest, furnace, iron/diamond + _pickaxe/_sword/_axe/_helmet/_chestplate/_leggings/_boots
                 - MINE: keep mining an ore forever (no count). args[0] = ore name
                 - NAVIGATE: like TRAVEL. args[0]=x, args[1]=z
                 - FARM / FIGHT / EXPLORE: no args

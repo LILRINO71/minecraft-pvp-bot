@@ -4,6 +4,7 @@ import baritone.api.BaritoneAPI;
 import baritone.api.pathing.goals.GoalBlock;
 import baritone.api.pathing.goals.GoalXZ;
 import com.mcbot.MCBotClient;
+import com.mcbot.ai.exec.CraftExecutor;
 import com.mcbot.ai.exec.GatherExecutor;
 import com.mcbot.ai.exec.TaskExecutor;
 import com.mcbot.ai.exec.TravelExecutor;
@@ -94,6 +95,13 @@ public class TaskQueue {
                 if (executor == null) { failCurrent(client, "bad coordinates"); return; }
                 executor.start(client);
             }
+            case CRAFT -> {
+                String item = task.args.length > 0 ? task.args[0] : "";
+                int count = 1;
+                if (task.args.length > 1) { try { count = Integer.parseInt(task.args[1].trim()); } catch (NumberFormatException ignored) {} }
+                executor = new CraftExecutor(item, count);
+                executor.start(client);
+            }
             case FARM -> {
                 mm.getModule("AutoFarm").enable();
             }
@@ -146,7 +154,7 @@ public class TaskQueue {
             case NAVIGATE -> {
                 done = !BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().isPathing();
             }
-            case GATHER, TRAVEL -> {
+            case GATHER, TRAVEL, CRAFT -> {
                 if (executor == null) { done = true; break; }
                 TaskExecutor.Status s = executor.tick(client);
                 if (++progressTimer > 40) {   // ~2s progress updates

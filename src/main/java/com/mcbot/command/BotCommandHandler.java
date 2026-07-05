@@ -60,6 +60,7 @@ public class BotCommandHandler {
             case "mine"   -> handleMine(client, arg);
             case "gather" -> handleGather(client, arg);
             case "travel" -> handleTravel(client, arg);
+            case "craft"  -> handleCraft(client, arg);
             case "build"  -> handleBuild(client, arg);
             case "goto"   -> handleGoto(client, arg);
             case "explore"-> moduleManager.getModule("Exploration").enable();
@@ -136,6 +137,23 @@ public class BotCommandHandler {
         if (parts.length < 2) { say(client, "Usage: #bot travel <x> <z>   (or <x> <y> <z>)"); return; }
         runTask(client, new Task(Task.Type.TRAVEL, "travel to " + arg.trim(), parts));
         say(client, "§aTravelling to " + arg.trim() + ".");
+    }
+
+    /** #bot craft <item> [count] — craft at an open crafting table. */
+    private void handleCraft(Minecraft client, String arg) {
+        String[] parts = arg.trim().split("\\s+");
+        if (parts.length == 0 || parts[0].isBlank()) {
+            say(client, "Usage: #bot craft <item> [count]   e.g. §e#bot craft iron_chestplate");
+            say(client, "§7Open a crafting table first. Try: planks, stick, chest, furnace, iron_pickaxe, diamond_chestplate…");
+            return;
+        }
+        int count = 1;
+        if (parts.length > 1) {
+            try { count = Integer.parseInt(parts[1]); }
+            catch (NumberFormatException e) { say(client, "Bad count: §c" + parts[1]); return; }
+        }
+        runTask(client, new Task(Task.Type.CRAFT, "craft " + count + "x " + parts[0], parts[0], String.valueOf(count)));
+        say(client, "§aCrafting " + count + "x " + parts[0] + " (crafting table must be open).");
     }
 
     /** Queues a single task on the BotBrain executor and starts it (no AI/API key needed). */
@@ -301,6 +319,7 @@ public class BotCommandHandler {
         say(client, "§6── Autonomy (no AI key needed) ──");
         say(client, "§e#bot gather <item> [count]     §7— collect N of a resource (e.g. gather iron 64)");
         say(client, "§e#bot travel <x> <z>            §7— route there and stop on arrival");
+        say(client, "§e#bot craft <item> [count]      §7— craft at an open table (iron_chestplate, etc.)");
         say(client, "§e#bot mine <ore>                §7— mine an ore forever (no count)");
         say(client, "§e#bot goto <x> <z>              §7— navigate to coords");
         say(client, "§e#bot build <schematic>         §7— build from .nbt file");
