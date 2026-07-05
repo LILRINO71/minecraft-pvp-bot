@@ -82,7 +82,10 @@ public class KillAuraModule extends Module {
         // Route through RotationManager so SilentAim (if on) aims server-side without
         // turning the camera; otherwise this rotates the camera like before.
         RotationManager.aimAt(client, target);
-        CombatUtil.switchToBestWeapon(client);
+        // With AttributeSwap on, hold the carry weapon so charge builds on it; otherwise pick the
+        // best melee weapon as usual.
+        if (AttributeSwapModule.isActive()) AttributeSwapModule.holdCarry(client);
+        else CombatUtil.switchToBestWeapon(client);
 
         // ── Sprint-reset bookkeeping (runs the tick after a hit) ──────────
         if (sprintReset.get() && pendingSprintReset) {
@@ -125,7 +128,8 @@ public class KillAuraModule extends Module {
         // Strike if we're in the crit window, or if a crit isn't available
         // (e.g. mid-air from terrain) so we never stall and let the enemy hit us.
         if (inCrit || !MovementUtil.canCritJump(client)) {
-            CombatUtil.attack(client, target);
+            if (AttributeSwapModule.isActive()) AttributeSwapModule.strike(client, target);
+            else CombatUtil.attack(client, target);
             jumpedForCrit = false;
             pendingSprintReset = true; // reset sprint next tick for max knockback
         }

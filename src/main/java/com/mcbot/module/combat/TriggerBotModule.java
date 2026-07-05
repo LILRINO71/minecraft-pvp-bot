@@ -27,12 +27,16 @@ public class TriggerBotModule extends Module {
 
     @Override
     protected void onTick(Minecraft client) {
+        // With AttributeSwap on, keep the carry weapon held so charge builds on it.
+        if (AttributeSwapModule.isActive()) AttributeSwapModule.holdCarry(client);
+
         Entity looked = client.crosshairPickEntity;
         if (!(looked instanceof LivingEntity target)) return;
         if (!target.isAlive()) return;
         if (!TargetConfig.get().shouldTarget(target)) return;
         if (!CombatUtil.isCooldownReady(client, CHARGE_THRESHOLD)) return;
 
-        CombatUtil.attack(client, target);
+        if (AttributeSwapModule.isActive()) AttributeSwapModule.strike(client, target);
+        else CombatUtil.attack(client, target);
     }
 }

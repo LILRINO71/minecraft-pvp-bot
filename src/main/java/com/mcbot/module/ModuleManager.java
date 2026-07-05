@@ -41,6 +41,7 @@ public class ModuleManager {
             new TriggerBotModule(),
             new SurroundModule(),
             new AttributesModule(),
+            new AttributeSwapModule(),
 
             // Level
             new AutoMineModule(),

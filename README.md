@@ -94,6 +94,7 @@ free for Meteor Client):
 | **TriggerBot** | Auto-attacks the entity under your crosshair when charged; respects friend/foe filter |
 | **Surround** | Instantly boxes obsidian around your feet to block crystal damage |
 | **Attributes** | Client-side attribute buffs — reach, attack speed, knockback resist, jump, scale (all tunable) |
+| **AttributeSwap** | 1.21 breach/weapon-swap — charge on a sword, land the hit as a Breach mace (strike weapon's enchants + carry weapon's damage) |
 | **AutoShield** | Blocks incoming projectiles/melee; releases to attack |
 
 ### World
