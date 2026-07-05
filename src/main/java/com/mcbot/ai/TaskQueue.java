@@ -4,6 +4,9 @@ import baritone.api.BaritoneAPI;
 import baritone.api.pathing.goals.GoalBlock;
 import baritone.api.pathing.goals.GoalXZ;
 import com.mcbot.MCBotClient;
+import com.mcbot.ai.exec.GatherExecutor;
+import com.mcbot.ai.exec.TaskExecutor;
+import com.mcbot.ai.exec.TravelExecutor;
 import com.mcbot.module.world.AutoMineModule;
 import com.mcbot.module.world.AutoFarmModule;
 import com.mcbot.module.world.BuilderModule;
@@ -25,11 +28,17 @@ public class TaskQueue {
 
     private final Deque<Task> queue = new ArrayDeque<>();
     private Task current = null;
+    private TaskExecutor executor = null;   // active executor for GATHER/TRAVEL tasks
     private int taskTimeout = 0;
+    private int progressTimer = 0;
     private static final int MAX_TASK_TICKS = 12000; // 10 minutes max per task
 
     public void add(Task task) { queue.addLast(task); }
-    public void clear() { queue.clear(); current = null; }
+    public void clear() {
+        queue.clear();
+        current = null;
+        if (executor != null) { executor.stop(Minecraft.getInstance()); executor = null; }
+    }
     public boolean isEmpty() { return queue.isEmpty() && current == null; }
     public Task getCurrent() { return current; }
     public int size() { return queue.size() + (current != null ? 1 : 0); }
@@ -72,6 +81,18 @@ public class TaskQueue {
                     BaritoneAPI.getProvider().getPrimaryBaritone()
                             .getCustomGoalProcess().setGoalAndPath(new GoalXZ(x, z));
                 }
+            }
+            case GATHER -> {
+                String item = task.args.length > 0 ? task.args[0] : "diamond";
+                int count = 1;
+                if (task.args.length > 1) { try { count = Integer.parseInt(task.args[1].trim()); } catch (NumberFormatException ignored) {} }
+                executor = new GatherExecutor(item, count);
+                executor.start(client);
+            }
+            case TRAVEL -> {
+                executor = TravelExecutor.fromArgs(task.args);
+                if (executor == null) { failCurrent(client, "bad coordinates"); return; }
+                executor.start(client);
             }
             case FARM -> {
                 mm.getModule("AutoFarm").enable();
@@ -125,6 +146,25 @@ public class TaskQueue {
             case NAVIGATE -> {
                 done = !BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().isPathing();
             }
+            case GATHER, TRAVEL -> {
+                if (executor == null) { done = true; break; }
+                TaskExecutor.Status s = executor.tick(client);
+                if (++progressTimer > 40) {   // ~2s progress updates
+                    progressTimer = 0;
+                    String pr = executor.progress();
+                    if (!pr.isEmpty() && client.player != null)
+                        client.player.sendSystemMessage(Component.literal("[MC BOT] " + pr));
+                }
+                if (s == TaskExecutor.Status.DONE) {
+                    done = true;
+                } else if (s == TaskExecutor.Status.FAILED) {
+                    String r = executor.failReason();
+                    executor.stop(client);
+                    executor = null;
+                    failCurrent(client, r.isEmpty() ? "executor failed" : r);
+                    return;
+                }
+            }
             case FARM -> {
                 // Farm for a fixed duration or until crops done
                 done = taskTimeout > 600; // 30 seconds
@@ -146,6 +186,7 @@ public class TaskQueue {
         }
 
         if (done) {
+            if (executor != null) { executor.stop(client); executor = null; }
             task.markComplete();
             if (client.player != null)
                 client.player.sendSystemMessage(Component.literal("[MC BOT] ✓ Done: " + task.description));
@@ -154,6 +195,7 @@ public class TaskQueue {
     }
 
     private void failCurrent(Minecraft client, String reason) {
+        if (executor != null) { executor.stop(client); executor = null; }
         if (current != null) {
             current.markFailed(reason);
             if (client.player != null)

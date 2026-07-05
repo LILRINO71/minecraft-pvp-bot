@@ -9,6 +9,8 @@ public class Task {
     public enum Type {
         MINE,           // mine specific blocks
         NAVIGATE,       // go to coordinates
+        GATHER,         // collect N of a resource (args: item, count)
+        TRAVEL,         // route to coordinates (args: x z  OR  x y z)
         FARM,           // harvest crops
         BUILD,          // build from schematic
         FIGHT,          // enter combat mode

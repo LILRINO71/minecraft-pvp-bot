@@ -2,6 +2,7 @@ package com.mcbot.command;
 
 import com.mcbot.MCBotClient;
 import com.mcbot.ai.BotBrainModule;
+import com.mcbot.ai.Task;
 import com.mcbot.macro.MacroLibrary;
 import com.mcbot.module.Module;
 import com.mcbot.module.ModuleManager;
@@ -57,6 +58,8 @@ public class BotCommandHandler {
             }
             case "status" -> showStatus(client);
             case "mine"   -> handleMine(client, arg);
+            case "gather" -> handleGather(client, arg);
+            case "travel" -> handleTravel(client, arg);
             case "build"  -> handleBuild(client, arg);
             case "goto"   -> handleGoto(client, arg);
             case "explore"-> moduleManager.getModule("Exploration").enable();
@@ -109,6 +112,37 @@ public class BotCommandHandler {
         }
         if (!mine.isEnabled()) mine.enable();
         say(client, "Mining: " + ore);
+    }
+
+    /** #bot gather <item> [count] — collect N of a resource via Baritone. */
+    private void handleGather(Minecraft client, String arg) {
+        String[] parts = arg.trim().split("\\s+");
+        if (parts.length == 0 || parts[0].isBlank()) {
+            say(client, "Usage: #bot gather <item> [count]   e.g. §e#bot gather iron 64");
+            return;
+        }
+        int count = 1;
+        if (parts.length > 1) {
+            try { count = Integer.parseInt(parts[1]); }
+            catch (NumberFormatException e) { say(client, "Bad count: §c" + parts[1]); return; }
+        }
+        runTask(client, new Task(Task.Type.GATHER, "gather " + count + " " + parts[0], parts[0], String.valueOf(count)));
+        say(client, "§aGathering " + count + " " + parts[0] + " — Baritone is on it.");
+    }
+
+    /** #bot travel <x> <z>  (or <x> <y> <z>) — route there and stop on arrival. */
+    private void handleTravel(Minecraft client, String arg) {
+        String[] parts = arg.trim().split("\\s+");
+        if (parts.length < 2) { say(client, "Usage: #bot travel <x> <z>   (or <x> <y> <z>)"); return; }
+        runTask(client, new Task(Task.Type.TRAVEL, "travel to " + arg.trim(), parts));
+        say(client, "§aTravelling to " + arg.trim() + ".");
+    }
+
+    /** Queues a single task on the BotBrain executor and starts it (no AI/API key needed). */
+    private void runTask(Minecraft client, Task task) {
+        BotBrainModule brain = (BotBrainModule) moduleManager.getModule("BotBrain");
+        brain.getTaskQueue().add(task);
+        if (!brain.isEnabled()) brain.enable();
     }
 
     private void handleBuild(Minecraft client, String schematic) {
@@ -264,7 +298,10 @@ public class BotCommandHandler {
 
     private void showHelp(Minecraft client) {
         say(client, "§6=== MC BOT Commands ===");
-        say(client, "§e#bot mine <ore>                §7— mine diamond/iron/gold/etc");
+        say(client, "§6── Autonomy (no AI key needed) ──");
+        say(client, "§e#bot gather <item> [count]     §7— collect N of a resource (e.g. gather iron 64)");
+        say(client, "§e#bot travel <x> <z>            §7— route there and stop on arrival");
+        say(client, "§e#bot mine <ore>                §7— mine an ore forever (no count)");
         say(client, "§e#bot goto <x> <z>              §7— navigate to coords");
         say(client, "§e#bot build <schematic>         §7— build from .nbt file");
         say(client, "§e#bot farm / explore            §7— toggle auto farm / exploration");
