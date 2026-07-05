@@ -40,6 +40,7 @@ public class ModuleManager {
             new SilentAimModule(),
             new TriggerBotModule(),
             new SurroundModule(),
+            new AttributesModule(),
 
             // Level
             new AutoMineModule(),

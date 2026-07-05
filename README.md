@@ -93,6 +93,7 @@ free for Meteor Client):
 | **SilentAim** | Sends aim to the server via a rotation packet — hits land, camera never turns (pairs with KillAura) |
 | **TriggerBot** | Auto-attacks the entity under your crosshair when charged; respects friend/foe filter |
 | **Surround** | Instantly boxes obsidian around your feet to block crystal damage |
+| **Attributes** | Client-side attribute buffs — reach, attack speed, knockback resist, jump, scale (all tunable) |
 | **AutoShield** | Blocks incoming projectiles/melee; releases to attack |
 
 ### World
