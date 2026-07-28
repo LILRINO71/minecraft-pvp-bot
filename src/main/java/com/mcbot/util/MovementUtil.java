@@ -34,8 +34,27 @@ public final class MovementUtil {
         left(client, false);
         right(client, false);
         jump(client, false);
+        sprint(client, false);
         sneak(client, false);
-        // intentionally do NOT force-disable sprint here — leave the player's own state
+        if (client.player != null) client.player.setSprinting(false);
+    }
+
+    /**
+     * Deterministically sets the ENTIRE movement key-state for this tick in one call, so no key
+     * ever gets left stuck (the bug that made KillAura bunny-hop / not strafe). Sprint only actually
+     * engages when moving forward and not sneaking, matching vanilla.
+     */
+    public static void setKeys(Minecraft client, boolean fwd, boolean back,
+                               boolean left, boolean right, boolean jump, boolean sprint) {
+        if (client.player == null) return;
+        forward(client, fwd);
+        back(client, back);
+        left(client, left);
+        right(client, right);
+        jump(client, jump);
+        boolean canSprint = sprint && fwd && !client.player.isShiftKeyDown();
+        sprint(client, canSprint);
+        client.player.setSprinting(canSprint);
     }
 
     // ── Strafe ───────────────────────────────────────────────────────────
